@@ -1,187 +1,195 @@
-// import 'dart:async';
-// import 'dart:ui' as ui;
-// import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
-// import 'package:three_dart/three_dart.dart' as THREE;
-// import 'package:three_dart_jsm/three_dart_jsm.dart' as THREE_JSM;
+import 'package:flutter/widgets.dart';
 
-// class webgpu_rtt extends StatefulWidget {
-//   String fileName;
-//   webgpu_rtt({Key? key, required this.fileName}) : super(key: key);
+import 'package:three_dart/three_dart.dart' as THREE;
+import 'package:three_dart_jsm/three_dart_jsm.dart' as THREE_JSM;
 
-//   @override
-//   _MyAppState createState() => _MyAppState();
-// }
+class webgpu_rtt extends StatefulWidget {
+  String fileName;
+  webgpu_rtt({Key? key, required this.fileName}) : super(key: key);
 
-// class _MyAppState extends State<webgpu_rtt> {
-//   // THREE_JSM.WebGPURenderer? renderer;
+  _MyAppState createState() => _MyAppState();
+}
 
-//   int? fboId;
-//   late double width;
-//   late double height;
+class _MyAppState extends State<webgpu_rtt> {
+  THREE_JSM.WebGPURenderer? renderer;
 
-//   Size? screenSize;
+  int? fboId;
+  late double width;
+  late double height;
 
-//   late THREE.Scene scene;
-//   late THREE.Camera camera;
-//   late THREE.Mesh mesh;
+  Size? screenSize;
 
-//   num dpr = 1.0;
+  late THREE.Scene scene;
+  late THREE.Camera camera;
+  late THREE.Mesh mesh;
 
-//   ui.Image? img;
+  num dpr = 1.0;
 
-//   bool verbose = true;
-//   bool disposed = false;
+  ui.Image? img;
 
-//   bool loaded = false;
 
-//   late THREE.Object3D box;
+  bool verbose = true;
+  bool disposed = false;
 
-//   late THREE.Texture texture;
+  bool loaded = false;
 
-//   late THREE.WebGLRenderTarget renderTarget;
+  late THREE.Object3D box;
 
-//   @override
-//   void initState() {
-//     super.initState();
-//   }
+  late THREE.Texture texture;
 
-//   // Platform messages are asynchronous, so we initialize in an async method.
-//   Future<void> initPlatformState() async {
-//     // width = screenSize!.width / 10;
-//     // height = width;
+  late THREE.WebGLRenderTarget renderTarget;
 
-//     width = 256.0;
-//     height = 256.0;
+  @override
+  void initState() {
+    super.initState();
+  }
 
-//     init();
-//   }
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initPlatformState() async {
+    // width = screenSize!.width / 10;
+    // height = width;
 
-//   initSize(BuildContext context) {
-//     if (screenSize != null) {
-//       return;
-//     }
+    width = 256.0;
+    height = 256.0;
 
-//     final mqd = MediaQuery.of(context);
+    init();
+  }
 
-//     screenSize = mqd.size;
-//     dpr = mqd.devicePixelRatio;
+  initSize(BuildContext context) {
+    if (screenSize != null) {
+      return;
+    }
 
-//     initPlatformState();
-//   }
+    final mqd = MediaQuery.of(context);
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text(widget.fileName),
-//       ),
-//       body: Builder(
-//         builder: (BuildContext context) {
-//           initSize(context);
-//           return SingleChildScrollView(child: _build(context));
-//         },
-//       ),
-//       floatingActionButton: FloatingActionButton(
-//         child: const Text("render"),
-//         onPressed: () {
-//           clickRender();
-//         },
-//       ),
-//     );
-//   }
+    screenSize = mqd.size;
+    dpr = mqd.devicePixelRatio;
 
-//   Widget _build(BuildContext context) {
-//     return Column(
-//       children: [
-//         Container(
-//           child: Stack(
-//             children: [
-//               Container(
-//                 color: Colors.black,
-//                 width: width.toDouble(),
-//                 height: height.toDouble(),
-//                 child: RawImage(image: img),
-//               )
-//             ],
-//           ),
-//         ),
-//       ],
-//     );
-//   }
+    initPlatformState();
+  }
 
-//   init() {
-//     camera = THREE.PerspectiveCamera(70, width / height, 0.1, 100);
-//     camera.position.z = 40;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.fileName),
+      ),
+      body: Builder(
+        builder: (BuildContext context) {
+          initSize(context);
+          return SingleChildScrollView(child: _build(context));
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: const Text("render"),
+        onPressed: () {
+          clickRender();
+        },
+      ),
+    );
+  }
 
-//     scene = THREE.Scene();
-//     scene.background = THREE.Color(0x0000ff);
+  Widget _build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          child: Stack(
+            children: [
+              Container(
+                color: Colors.black,
+                width: width.toDouble(),
+                height: height.toDouble(),
+                child: RawImage(image: img),
+              )
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
-//     // textured mesh
+  init() {
+    camera = new THREE.PerspectiveCamera( 70, width / height, 0.1, 100 );
+    camera.position.z = 40;
 
-//     var geometryBox = THREE.BoxGeometry(10, 10, 10);
-//     var materialBox = THREE_JSM.MeshBasicNodeMaterial(null);
-//     materialBox.colorNode = THREE_JSM.ColorNode(THREE.Color(1.0, 1.0, 0.0));
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color( 0x0000ff );
 
-//     box = THREE.Mesh(geometryBox, materialBox);
+    // textured mesh
 
-//     box.rotation.set(0.1, 0.5, 1.2);
+    var geometryBox = new THREE.BoxGeometry(10, 10, 10);
+    var materialBox = new THREE_JSM.MeshBasicNodeMaterial(null);
+    materialBox.colorNode = new THREE_JSM.ColorNode( new THREE.Color(1.0, 1.0, 0.0) );
 
-//     scene.add(box);
+    box = new THREE.Mesh( geometryBox, materialBox );
 
-//     camera.lookAt(scene.position);
+    box.rotation.set(0.1, 0.5, 1.2);
 
-//     renderer = THREE_JSM.WebGPURenderer(
-//         {"width": width.toInt(), "height": height.toInt(), "antialias": false, "sampleCount": 1});
-//     dpr = 1.0;
-//     renderer!.setPixelRatio(dpr);
-//     renderer!.setSize(width.toInt(), height.toInt());
-//     renderer!.init();
+    scene.add( box );
 
-//     var pars = THREE.WebGLRenderTargetOptions({"format": THREE.RGBAFormat, "samples": 1});
-//     renderTarget = THREE.WebGLRenderTarget((width * dpr).toInt(), (height * dpr).toInt(), pars);
-//     renderer!.setRenderTarget(renderTarget);
-//     // sourceTexture = renderer!.getRenderTargetGLTexture(renderTarget);
-//   }
+    camera.lookAt(scene.position);
 
-//   animate() {
-//     box.rotation.x += 0.01;
-//     box.rotation.y += 0.02;
-//     box.rotation.z += 0.04;
+    renderer = new THREE_JSM.WebGPURenderer({
+      "width": width.toInt(),
+      "height": height.toInt(),
+      "antialias": false,
+      "sampleCount": 1
+    });
+    dpr = 1.0;
+    renderer!.setPixelRatio( dpr );
+    renderer!.setSize( width.toInt(), height.toInt() );
+    renderer!.init();
 
-//     renderer!.render(scene, camera);
+    var pars = THREE.WebGLRenderTargetOptions({"format": THREE.RGBAFormat, "samples": 1});
+    renderTarget = THREE.WebGLRenderTarget(
+        (width * dpr).toInt(), (height * dpr).toInt(), pars);
+    renderer!.setRenderTarget(renderTarget);
+    // sourceTexture = renderer!.getRenderTargetGLTexture(renderTarget);
+  }
 
-//     // var pixels = renderer!.getPixels();
+  animate() {
+    box.rotation.x += 0.01;
+    box.rotation.y += 0.02;
+    box.rotation.z += 0.04;
 
-//     var target = THREE.Vector2();
-//     renderer!.getSize(target);
+    renderer!.render( scene, camera );
 
-//     // print(" -----------target: ${target.x} ${target.y}----------- pixels: ${pixels} ");
+    var pixels = renderer!.getPixels();
 
-//     // if (pixels != null) {
-//     //   ui.decodeImageFromPixels(pixels!, target.x.toInt(), target.y.toInt(), ui.PixelFormat.rgba8888,
-//     //       (image) {
-//     //     setState(() {
-//     //       img = image;
-//     //     });
-//     //   });
-//     // }
+    var target = THREE.Vector2();
+    renderer!.getSize(target);
 
-//     // Future.delayed(const Duration(milliseconds: 33), () {
-//     //   animate();
-//     // });
-//   }
+    // print(" -----------target: ${target.x} ${target.y}----------- pixels: ${pixels} ");
 
-//   clickRender() {
-//     print(" click render .... ");
-//     animate();
-//   }
+    if (pixels != null) {
+      ui.decodeImageFromPixels(pixels!, target.x.toInt(), target.y.toInt(), ui.PixelFormat.rgba8888,
+          (image) {
+        setState(() {
+          img = image;
+        });
+      });
+    }
 
-//   @override
-//   void dispose() {
-//     print(" dispose ............. ");
-//     disposed = true;
+    // Future.delayed(const Duration(milliseconds: 33), () {
+    //   animate();
+    // });
+  }
 
-//     super.dispose();
-//   }
-// }
+  clickRender() {
+    print(" click render .... ");
+    animate();
+  }
+
+  @override
+  void dispose() {
+    print(" dispose ............. ");
+    disposed = true;
+
+    super.dispose();
+  }
+}

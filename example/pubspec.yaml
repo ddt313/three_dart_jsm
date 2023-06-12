@@ -34,13 +34,10 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  flutter_gl:
-  three_dart: 
-    git:
-        url: https://github.com/L3odr0id/three_dart.git
-        ref: 695b58ab4ef889c4f472fb79420a36134974da5e 
+  three_dart: ^0.0.14
   three_dart_jsm:
     path: ../
+  
 
 dev_dependencies:
   flutter_test:
@@ -48,8 +45,11 @@ dev_dependencies:
   flutter_lints: ^2.0.1
 
 # dependency_overrides:
-#   three_dart:
-#     path: ../../../three_dart
+  # three_dart:
+  #   path: ../../../three_dart
+  # flutter_gl:
+  #   path: ../../../flutter_gl/flutter_gl
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
