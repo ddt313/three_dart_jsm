@@ -74,7 +74,7 @@ class RenderableFace extends RenderableObject{
   //Material? material;
   late List<Vector2> uvs;
   num z;
-  double renderOrder;
+  int renderOrder;
 } 
 class RenderableVertex extends RenderableObject{
   RenderableVertex({
@@ -123,7 +123,7 @@ class RenderableLine extends RenderableObject{
   late List<Color> vertexColors;
   dynamic? material;
   num z;
-  double renderOrder;
+  int renderOrder;
 }
 class RenderableSprite extends RenderableObject{
   RenderableSprite({
@@ -149,7 +149,7 @@ class RenderableSprite extends RenderableObject{
   late Euler rotation;
   late Vector3 scale;
   dynamic? material;
-  double renderOrder;
+  int renderOrder;
 }
 class RenderData extends RenderableObject{
   List<RenderableObject> objects = [];
