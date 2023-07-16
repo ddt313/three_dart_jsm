@@ -471,6 +471,7 @@ class MaterialCreator {
 
     if (loader == null) {
       loader = new TextureLoader(manager);
+      loader.flipY = true;
     }
 
     if (loader.setCrossOrigin != null) loader.setCrossOrigin(this.crossOrigin);
