@@ -26,16 +26,16 @@ class TessellateModifier {
     var maxIterations = this.maxIterations;
     var maxEdgeLengthSquared = this.maxEdgeLength * this.maxEdgeLength;
 
-    var va = new Vector3.init();
-    var vb = new Vector3.init();
-    var vc = new Vector3.init();
-    var vm = new Vector3.init();
+    var va = new Vector3();
+    var vb = new Vector3();
+    var vc = new Vector3();
+    var vm = new Vector3();
     var vs = [va, vb, vc, vm];
 
-    var na = new Vector3.init();
-    var nb = new Vector3.init();
-    var nc = new Vector3.init();
-    var nm = new Vector3.init();
+    var na = new Vector3();
+    var nb = new Vector3();
+    var nc = new Vector3();
+    var nm = new Vector3();
     var ns = [na, nb, nc, nm];
 
     var ca = new Color(1, 1, 1);

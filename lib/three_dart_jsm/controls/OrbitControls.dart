@@ -89,7 +89,7 @@ class OrbitControls with EventDispatcher {
   var sphericalDelta = new Spherical();
 
   num scale = 1;
-  var panOffset = new Vector3.init();
+  var panOffset = new Vector3();
   var zoomChanged = false;
 
   var rotateStart = new Vector2(0, 0);

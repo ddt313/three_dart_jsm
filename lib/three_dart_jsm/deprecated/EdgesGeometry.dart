@@ -1,8 +1,8 @@
 // part of jsm_deprecated;
 
-// var _v0 = new THREE.Vector3.init();
-// var _v1 = new THREE.Vector3.init();
-// var _normal = new THREE.Vector3.init();
+// var _v0 = new THREE.Vector3();
+// var _v1 = new THREE.Vector3();
+// var _normal = new THREE.Vector3();
 // var _triangle = new THREE.Triangle(null, null, null);
 
 // class EdgesGeometry extends Geometry {

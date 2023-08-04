@@ -426,8 +426,8 @@ Function computeBounds =
   var targets = primitiveDef["targets"];
 
   if (targets != null) {
-    var maxDisplacement = new Vector3.init();
-    var vector = new Vector3.init();
+    var maxDisplacement = new Vector3();
+    var vector = new Vector3();
 
     for (var i = 0, il = targets.length; i < il; i++) {
       var target = targets[i];

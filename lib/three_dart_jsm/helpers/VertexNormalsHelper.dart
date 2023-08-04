@@ -1,7 +1,7 @@
 part of jsm_helpers;
 
-var _v1 = new Vector3.init();
-var _v2 = new Vector3.init();
+var _v1 = new Vector3();
+var _v2 = new Vector3();
 var _normalMatrix = new Matrix3();
 
 class VertexNormalsHelper extends LineSegments {

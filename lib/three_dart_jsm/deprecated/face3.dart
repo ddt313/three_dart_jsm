@@ -17,7 +17,7 @@ class Face3 {
 
     this.normal = (normal != null && normal.runtimeType == THREE.Vector3)
         ? normal
-        : new THREE.Vector3.init();
+        : new THREE.Vector3();
     this.vertexNormals = normal != null ? normal : [];
 
     this.color = (color != null && color.runtimeType == THREE.Color)
@@ -43,7 +43,7 @@ class Face3 {
     this.materialIndex = source.materialIndex;
 
     this.vertexNormals = List<THREE.Vector3>.filled(
-        source.vertexNormals.length, THREE.Vector3.init());
+        source.vertexNormals.length, THREE.Vector3());
 
     for (var i = 0, il = source.vertexNormals.length; i < il; i++) {
       this.vertexNormals[i] = source.vertexNormals[i].clone();

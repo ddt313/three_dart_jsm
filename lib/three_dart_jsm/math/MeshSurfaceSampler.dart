@@ -13,7 +13,7 @@ part of jsm_math;
 
 class MeshSurfaceSampler {
   var _face = new Triangle(null, null, null);
-  var _color = new Vector3.init();
+  var _color = new Vector3();
 
   late BufferGeometry geometry;
   late Function randomFunction;

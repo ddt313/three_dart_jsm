@@ -180,7 +180,7 @@ class LineSegmentsGeometry extends InstancedBufferGeometry {
   }
 
   computeBoundingSphere() {
-    var vector = new Vector3.init();
+    var vector = new Vector3();
 
     if (this.boundingSphere == null) {
       this.boundingSphere = new Sphere(null, null);

@@ -56,8 +56,8 @@ class GLTFLoader extends Loader {
     });
   }
 
-  loadAsync(url) async {
-    var completer = Completer();
+  Future loadAsync(url) async {
+    Completer completer = Completer();
 
     load(url, (buffer) {
       completer.complete(buffer);
@@ -95,7 +95,7 @@ class GLTFLoader extends Loader {
       scope.manager.itemEnd(url);
     };
 
-    var loader = new FileLoader(this.manager);
+    var loader = FileLoader(this.manager);
 
     loader.setPath(this.path);
     loader.setResponseType('arraybuffer');
@@ -117,6 +117,12 @@ class GLTFLoader extends Loader {
 
       // }
     }, onProgress, _onError);
+  }
+
+  @override
+  GLTFLoader setPath(String path) {
+    super.setPath(path);
+    return this;
   }
 
   setDRACOLoader(dracoLoader) {

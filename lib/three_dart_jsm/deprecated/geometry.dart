@@ -3,7 +3,7 @@ part of jsm_deprecated;
 int _geometryId = 0; // Geometry uses even numbers as Id
 var _geometrym1 = new THREE.Matrix4();
 var _geometryobj = new THREE.Object3D();
-var _geometryoffset = THREE.Vector3.init();
+var _geometryoffset = THREE.Vector3();
 
 class Geometry with THREE.EventDispatcher {
   int id = _geometryId += 2;
@@ -154,7 +154,7 @@ class Geometry with THREE.EventDispatcher {
 
     for (var i = 0; i < position.count; i++) {
       scope.vertices
-          .add(new THREE.Vector3.init().fromBufferAttribute(position, i));
+          .add(new THREE.Vector3().fromBufferAttribute(position, i));
 
       if (color != null) {
         scope.colors
@@ -174,9 +174,9 @@ class Geometry with THREE.EventDispatcher {
       List<THREE.Vector3> vertexNormals = (normal == null)
           ? []
           : [
-              new THREE.Vector3.init().fromBufferAttribute(normal, a),
-              new THREE.Vector3.init().fromBufferAttribute(normal, b),
-              new THREE.Vector3.init().fromBufferAttribute(normal, c)
+              new THREE.Vector3().fromBufferAttribute(normal, a),
+              new THREE.Vector3().fromBufferAttribute(normal, b),
+              new THREE.Vector3().fromBufferAttribute(normal, c)
             ];
 
       var face = new Face3(a, b, c, vertexNormals, vertexColors,
@@ -272,7 +272,7 @@ class Geometry with THREE.EventDispatcher {
   }
 
   computeFaceNormals() {
-    var cb = new THREE.Vector3.init(), ab = new THREE.Vector3.init();
+    var cb = new THREE.Vector3(), ab = new THREE.Vector3();
 
     for (var f = 0, fl = this.faces.length; f < fl; f++) {
       var face = this.faces[f];
@@ -296,14 +296,14 @@ class Geometry with THREE.EventDispatcher {
         this.vertices.length, THREE.Vector3(0, 0, 0));
 
     for (var v = 0, vl = this.vertices.length; v < vl; v++) {
-      vertices[v] = new THREE.Vector3.init();
+      vertices[v] = new THREE.Vector3();
     }
 
     if (areaWeighted) {
       // vertex normals weighted by triangle areas
       // http://www.iquilezles.org/www/articles/normals/normals.htm
 
-      var cb = new THREE.Vector3.init(), ab = new THREE.Vector3.init();
+      var cb = new THREE.Vector3(), ab = new THREE.Vector3();
 
       for (var f = 0, fl = this.faces.length; f < fl; f++) {
         var face = this.faces[f];

@@ -16,9 +16,9 @@ class OBBC {
 var a = OBBC({
   "c": null, // center
   "u": [
-    new Vector3.init(),
-    new Vector3.init(),
-    new Vector3.init()
+    new Vector3(),
+    new Vector3(),
+    new Vector3()
   ], // basis vectors
   "e": [] // half width
 });
@@ -26,9 +26,9 @@ var a = OBBC({
 var b = OBBC({
   "c": null, // center
   "u": [
-    new Vector3.init(),
-    new Vector3.init(),
-    new Vector3.init()
+    new Vector3(),
+    new Vector3(),
+    new Vector3()
   ], // basis vectors
   "e": [] // half width
 });
@@ -37,12 +37,12 @@ var R = [[], [], []];
 var AbsR = [[], [], []];
 var t = [];
 
-var xAxis = new Vector3.init();
-var yAxis = new Vector3.init();
-var zAxis = new Vector3.init();
-var v1 = new Vector3.init();
-var size = new Vector3.init();
-var closestPoint = new Vector3.init();
+var xAxis = new Vector3();
+var yAxis = new Vector3();
+var zAxis = new Vector3();
+var v1 = new Vector3();
+var size = new Vector3();
+var closestPoint = new Vector3();
 var rotationMatrix = new Matrix3();
 var aabb = new Box3(null, null);
 var obbmatrix = new Matrix4();
@@ -58,8 +58,8 @@ class OBB {
   late Matrix3 rotation;
 
   OBB({center, halfSize, rotation}) {
-    this.center = center ?? Vector3.init();
-    this.halfSize = halfSize ?? Vector3.init();
+    this.center = center ?? Vector3();
+    this.halfSize = halfSize ?? Vector3();
     this.rotation = rotation ?? Matrix3();
   }
 

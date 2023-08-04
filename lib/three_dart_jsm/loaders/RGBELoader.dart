@@ -6,7 +6,7 @@ part of jsm_loader;
 class RGBELoader extends DataTextureLoader {
   int type = HalfFloatType;
 
-  RGBELoader(manager) : super(manager) {}
+  RGBELoader([manager]) : super(manager) {}
 
   // adapted from http://www.graphics.cornell.edu/~bjw/rgbe.html
 
