@@ -15,3 +15,4 @@ part './TransformControlsGizmo.dart';
 part './ArcballControls.dart';
 part './PointerLockControls.dart';
 part './DragControls.dart';
+part './first_person_controls.dart';

@@ -37,6 +37,7 @@ class TestGame extends StatefulWidget {
 
 class _TestGamePageState extends State<TestGame> {
   FocusNode node = FocusNode();
+  late FirstPersonControls fpsControl;
   // gl values
   //late Object3D object;
   bool animationReady = false;
@@ -65,9 +66,7 @@ class _TestGamePageState extends State<TestGame> {
 
   Octree worldOctree = Octree();
   Capsule playerCollider = Capsule(Vector3( 0, 0.35, 0 ), Vector3( 0, 1, 0 ), 0.35);
-
-  Vector3 playerVelocity = Vector3();
-  Vector3 playerDirection = Vector3();
+  late final Vector3 playerVelocity;
 
   bool playerOnFloor = false;
   int mouseTime = 0;
@@ -119,7 +118,8 @@ class _TestGamePageState extends State<TestGame> {
     double deltaTime = Math.min(0.05, clock.getDelta())/stepsPerFrame;
     if(deltaTime != 0){
       for (int i = 0; i < stepsPerFrame; i ++) {
-        controls(deltaTime);
+        //controls(deltaTime);
+        fpsControl.update(deltaTime);
         updatePlayer(deltaTime);
         updateSpheres(deltaTime);
         teleportPlayerIfOob();
@@ -179,6 +179,8 @@ class _TestGamePageState extends State<TestGame> {
       });
     });
 
+    fpsControl = FirstPersonControls(camera, _globalKey);
+    playerVelocity = fpsControl.object.position;
     animationReady = true;
   }
   void render() {
@@ -264,11 +266,11 @@ class _TestGamePageState extends State<TestGame> {
       velocity: Vector3()
     ));
     SphereData sphere = spheres.last;
-    camera.getWorldDirection( playerDirection );
-    sphere.collider.center.copy(playerCollider.end).addScaledVector( playerDirection, playerCollider.radius * 1.5 );
+    camera.getWorldDirection( fpsControl.targetPosition );
+    sphere.collider.center.copy(playerCollider.end).addScaledVector( fpsControl.targetPosition, playerCollider.radius * 1.5 );
     // throw the ball with more force if we hold the button longer, and if we move forward
     double impulse = 15 + 30 * ( 1 - Math.exp((mouseTime-DateTime.now().millisecondsSinceEpoch) * 0.001));
-    sphere.velocity.copy( playerDirection ).multiplyScalar( impulse );
+    sphere.velocity.copy( fpsControl.targetPosition ).multiplyScalar( impulse );
     sphere.velocity.addScaledVector( playerVelocity, 2 );
     sphereIdx = ( sphereIdx + 1 ) % spheres.length;
   }
@@ -287,6 +289,7 @@ class _TestGamePageState extends State<TestGame> {
     }
   }
   void updatePlayer(double deltaTime) {
+    playerCollider.end.copy(playerVelocity);
     double damping = Math.exp(-4 * deltaTime) -1;
     if(!playerOnFloor){
       playerVelocity.y -= gravity * deltaTime;
@@ -294,11 +297,11 @@ class _TestGamePageState extends State<TestGame> {
       damping *= 0.1;
     }
 
-    playerVelocity.addScaledVector( playerVelocity, damping );
-    Vector3 deltaPosition = playerVelocity.clone().multiplyScalar( deltaTime );
-    playerCollider.translate( deltaPosition );
+    //playerVelocity.addScaledVector( playerVelocity, damping );
+    //Vector3 deltaPosition = playerVelocity.clone().multiplyScalar( deltaTime );
+    //playerCollider.translate( playerVelocity );
     playerCollisions();
-    camera.position.copy(playerCollider.end);
+    
   }
   void playerSphereCollision(SphereData sphere) {
     Vector3 center = vector1.addVectors(playerCollider.start, playerCollider.end ).multiplyScalar( 0.5 );
@@ -374,41 +377,6 @@ class _TestGamePageState extends State<TestGame> {
     }
   }
 
-  Vector3 getForwardVector() {
-    camera.getWorldDirection(playerDirection);
-    playerDirection.y = 0;
-    playerDirection.normalize();
-    return playerDirection;
-  }
-  Vector3 getSideVector() {
-    camera.getWorldDirection( playerDirection );
-    playerDirection.y = 0;
-    playerDirection.normalize();
-    playerDirection.cross( camera.up );
-    return playerDirection;
-  }
-  void controls(double deltaTime){
-    // gives a bit of air control
-    double speedDelta = deltaTime*(playerOnFloor?25:8);
-
-    if(keyStates[LogicalKeyboardKey.keyW]! || keyStates[LogicalKeyboardKey.arrowUp]!){
-      playerVelocity.add( getForwardVector().multiplyScalar(speedDelta));
-    }
-    if(keyStates[LogicalKeyboardKey.keyS]! || keyStates[LogicalKeyboardKey.arrowDown]!){
-      playerVelocity.add( getForwardVector().multiplyScalar(-speedDelta));
-    }
-    if(keyStates[LogicalKeyboardKey.keyA]! || keyStates[LogicalKeyboardKey.arrowLeft]!){
-      playerVelocity.add( getSideVector().multiplyScalar(-speedDelta));
-    }
-    if (keyStates[LogicalKeyboardKey.keyD]! || keyStates[LogicalKeyboardKey.arrowRight]!){
-      playerVelocity.add( getSideVector().multiplyScalar(speedDelta));
-    }
-    if(playerOnFloor){
-      if(keyStates[LogicalKeyboardKey.space]!){
-        playerVelocity.y = 15;
-      }
-    }
-  }
   void teleportPlayerIfOob(){
     if(camera.position.y <= - 25){
       playerCollider.start.set(0,0.35,0);
@@ -426,78 +394,29 @@ class _TestGamePageState extends State<TestGame> {
         width: screenSize!.width,
         height: screenSize!.height,
         color: Theme.of(context).canvasColor,
-        child: RawKeyboardListener(
-          focusNode: node,
-          onKey: (event){
-            if(event is RawKeyDownEvent){
-              if(
-                event.data.logicalKey == LogicalKeyboardKey.keyW || 
-                event.data.logicalKey == LogicalKeyboardKey.keyA || 
-                event.data.logicalKey == LogicalKeyboardKey.keyS || 
-                event.data.logicalKey == LogicalKeyboardKey.keyD || 
-                event.data.logicalKey == LogicalKeyboardKey.arrowUp || 
-                event.data.logicalKey == LogicalKeyboardKey.arrowLeft || 
-                event.data.logicalKey == LogicalKeyboardKey.arrowDown || 
-                event.data.logicalKey == LogicalKeyboardKey.arrowRight ||
-                event.data.logicalKey == LogicalKeyboardKey.space
-              ){
-                keyStates[event.data.logicalKey] = true;
-              }
-            }
-            else if(event is RawKeyUpEvent){
-              if(
-                event.data.logicalKey == LogicalKeyboardKey.keyW || 
-                event.data.logicalKey == LogicalKeyboardKey.keyA || 
-                event.data.logicalKey == LogicalKeyboardKey.keyS || 
-                event.data.logicalKey == LogicalKeyboardKey.keyD ||
-                event.data.logicalKey == LogicalKeyboardKey.arrowUp || 
-                event.data.logicalKey == LogicalKeyboardKey.arrowLeft || 
-                event.data.logicalKey == LogicalKeyboardKey.arrowDown || 
-                event.data.logicalKey == LogicalKeyboardKey.arrowRight ||
-                event.data.logicalKey == LogicalKeyboardKey.space
-              ){
-                keyStates[event.data.logicalKey] = false;
-              }
-            }
-          },
-          child: Listener(
-            onPointerDown: (details){
-              mouseTime = DateTime.now().millisecondsSinceEpoch;
-            },
-            onPointerUp: (details){
-              throwBall();
-            },
-            onPointerHover: (PointerHoverEvent details){
-              if(animationReady){
-                camera.rotation.y -= details.delta.dx/100;
-                camera.rotation.x -= details.delta.dy/100;
-              }
-            },
-            child: DomLikeListenable(
-              key: _globalKey,
-              builder: (BuildContext context) {
-                FocusScope.of(context).requestFocus(node);
-                return Container(
-                  width: width,
-                  height: height,
-                  color: Theme.of(context).canvasColor,
-                  child: Builder(builder: (BuildContext context) {
-                    if (kIsWeb) {
-                      return three3dRender.isInitialized
-                          ? HtmlElementView(
-                              viewType:
-                                  three3dRender.textureId!.toString())
-                          : Container();
-                    } else {
-                      return three3dRender.isInitialized
-                          ? Texture(textureId: three3dRender.textureId!)
-                          : Container();
-                    }
-                  })
-                );
-              }),
-          )
-        )
+        child: DomLikeListenable(
+          key: _globalKey,
+          builder: (BuildContext context) {
+            FocusScope.of(context).requestFocus(node);
+            return Container(
+              width: width,
+              height: height,
+              color: Theme.of(context).canvasColor,
+              child: Builder(builder: (BuildContext context) {
+                if (kIsWeb) {
+                  return three3dRender.isInitialized
+                      ? HtmlElementView(
+                          viewType:
+                              three3dRender.textureId!.toString())
+                      : Container();
+                } else {
+                  return three3dRender.isInitialized
+                      ? Texture(textureId: three3dRender.textureId!)
+                      : Container();
+                }
+              })
+            );
+          }),
       );
     });
   }
