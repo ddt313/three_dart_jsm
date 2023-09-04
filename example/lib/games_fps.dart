@@ -118,7 +118,6 @@ class _TestGamePageState extends State<TestGame> {
     double deltaTime = Math.min(0.05, clock.getDelta())/stepsPerFrame;
     if(deltaTime != 0){
       for (int i = 0; i < stepsPerFrame; i ++) {
-        //controls(deltaTime);
         fpsControl.update(deltaTime);
         updatePlayer(deltaTime);
         updateSpheres(deltaTime);
@@ -180,6 +179,9 @@ class _TestGamePageState extends State<TestGame> {
     });
 
     fpsControl = FirstPersonControls(camera, _globalKey);
+    fpsControl.lookSpeed = 1/100;
+    fpsControl.movementSpeed = 5.0;
+    fpsControl.lookType = LookType.position;
     playerVelocity = fpsControl.object.position;
     animationReady = true;
   }
@@ -276,20 +278,24 @@ class _TestGamePageState extends State<TestGame> {
   }
   
   void playerCollisions() {
+    playerCollider.start.copy(playerVelocity.add(Vector3(0,0.02,0)));
     OctreeData? result = worldOctree.capsuleIntersect(playerCollider);
     playerOnFloor = false;
     if(result != null){
       playerOnFloor = result.normal.y > 0;
       if(!playerOnFloor) {
-        playerVelocity.addScaledVector(result.normal, - result.normal.dot(playerVelocity));
+        playerVelocity.addScaledVector(
+          result.normal, 
+          -result.normal.dot(playerVelocity)
+        );
       }
       if(result.depth > 0.02){
         playerCollider.translate(result.normal.multiplyScalar(result.depth));
+        playerVelocity.add(playerCollider.start);
       }
     }
   }
   void updatePlayer(double deltaTime) {
-    playerCollider.end.copy(playerVelocity);
     double damping = Math.exp(-4 * deltaTime) -1;
     if(!playerOnFloor){
       playerVelocity.y -= gravity * deltaTime;
@@ -299,9 +305,9 @@ class _TestGamePageState extends State<TestGame> {
 
     //playerVelocity.addScaledVector( playerVelocity, damping );
     //Vector3 deltaPosition = playerVelocity.clone().multiplyScalar( deltaTime );
-    //playerCollider.translate( playerVelocity );
+    //playerCollider.translate(deltaPosition);
+
     playerCollisions();
-    
   }
   void playerSphereCollision(SphereData sphere) {
     Vector3 center = vector1.addVectors(playerCollider.start, playerCollider.end ).multiplyScalar( 0.5 );
@@ -378,11 +384,11 @@ class _TestGamePageState extends State<TestGame> {
   }
 
   void teleportPlayerIfOob(){
-    if(camera.position.y <= - 25){
+    if(playerVelocity.y <= - 25){
       playerCollider.start.set(0,0.35,0);
       playerCollider.end.set(0,1,0);
       playerCollider.radius = 0.35;
-      camera.position.copy(playerCollider.end);
+      playerVelocity.copy(playerCollider.end);
       camera.rotation.set(0,0,0);
     }
   }

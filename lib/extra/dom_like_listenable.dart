@@ -243,7 +243,7 @@ class WebPointerEvent {
       wpe.deltaY = event.scrollDelta.dy;
     }
 
-    if(event is PointerMoveEvent) {
+    if(event is PointerMoveEvent || event is PointerHoverEvent) {
       wpe.movementX = event.delta.dx;
       wpe.movementY = event.delta.dy;
     }

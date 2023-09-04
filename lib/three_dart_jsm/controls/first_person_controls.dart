@@ -1,11 +1,13 @@
 part of jsm_controls;
 
+enum LookType{active,position}
+
 class FirstPersonControls with EventDispatcher {
   FirstPersonControls(this.object,this.listenableKey):super(){
     this.domElement.addEventListener( 'contextmenu', contextmenu, false );
     this.domElement.addEventListener( 'mousemove', onMouseMove, false );
     this.domElement.addEventListener( 'pointerdown', onMouseDown, false );
-    this.domElement.addEventListener( 'pointeruo', onMouseUp, false );
+    this.domElement.addEventListener( 'pointerup', onMouseUp, false );
     //this.domElement.setAttribute( 'tabindex', - 1 );
 
     this.domElement.addEventListener( 'keydown', onKeyDown, false );
@@ -26,12 +28,12 @@ class FirstPersonControls with EventDispatcher {
 
 	double movementSpeed = 1.0;
   Vector3 cameraVelocity = Vector3();
-	double lookSpeed = 0.5;
+	double lookSpeed = 0.05;
 
 	bool lookVertical = true;
 	bool autoForward = false;
 
-	bool activeLook = true;
+	LookType lookType = LookType.active;
 
 	bool heightSpeed = false;
 	double heightCoef = 1.0;
@@ -79,19 +81,14 @@ class FirstPersonControls with EventDispatcher {
 
 	void onMouseDown( event ) {
 		//this.domElement.focus();
-
 		event.preventDefault();
 		//event.stopPropagation();
 
-		if ( this.activeLook ) {
-
+		if (lookType == LookType.active) {
 			switch ( event.button ) {
-
 				case 0: this.moveForward = true; break;
 				case 2: this.moveBackward = true; break;
-
 			}
-
 		}
 
 		this.mouseDragOn = true;
@@ -99,9 +96,9 @@ class FirstPersonControls with EventDispatcher {
 
 	void onMouseUp( event ) {
 		event.preventDefault();
-		event.stopPropagation();
+		//event.stopPropagation();
 
-		if ( this.activeLook ) {
+		if (lookType == LookType.active) {
 			switch ( event.button ) {
 				case 0: this.moveForward = false; break;
 				case 2: this.moveBackward = false; break;
@@ -112,71 +109,64 @@ class FirstPersonControls with EventDispatcher {
 	}
 
 	void onMouseMove(event) {
-		this.mouseX = event.pageX - this.domElement.offsetLeft - this.viewHalfX;
-		this.mouseY = event.pageY - this.domElement.offsetTop - this.viewHalfY;
+    if(lookType == LookType.position){
+      object.rotation.y -= event.movementX*lookSpeed;
+      object.rotation.x -= event.movementY*lookSpeed;
+    }
+    else{
+      this.mouseX = event.pageX - this.domElement.offsetLeft - this.viewHalfX;
+      this.mouseY = event.pageY - this.domElement.offsetTop - this.viewHalfY;
+    }
 	}
 
-	void onKeyDown( event) {
+	void onKeyDown(event) {
 		switch ( event.keyId ) {
-
-			case 119: /*up*/
+			case 4294968068: /*up*/
 			case 119: /*W*/ this.moveForward = true; break;
 
-			case 37: /*left*/
+			case 4294968066: /*left*/
 			case 97: /*A*/ this.moveLeft = true; break;
 
-			case 40: /*down*/
+			case 4294968065: /*down*/
 			case 115: /*S*/ this.moveBackward = true; break;
 
-			case 39: /*right*/
+			case 4294968067: /*right*/
 			case 100: /*D*/ this.moveRight = true; break;
 
 			case 114: /*R*/ this.moveUp = true; break;
 			case 102: /*F*/ this.moveDown = true; break;
-
 		}
-
 	}
 
 	void onKeyUp( event ) {
 		switch ( event.keyId ) {
-			case 38: /*up*/
+			case 4294968068: /*up*/
 			case 119: /*W*/ this.moveForward = false; break;
 
-			case 37: /*left*/
+			case 4294968066: /*left*/
 			case 97: /*A*/ this.moveLeft = false; break;
 
-			case 40: /*down*/
+			case 4294968065: /*down*/
 			case 115: /*S*/ this.moveBackward = false; break;
 
-			case 39: /*right*/
+			case 4294968067: /*right*/
 			case 100: /*D*/ this.moveRight = false; break;
 
 			case 114: /*R*/ this.moveUp = false; break;
 			case 102: /*F*/ this.moveDown = false; break;
-
 		}
-
 	}
 
 	FirstPersonControls lookAt ( x, y, z ) {
-
 		if ( x.isVector3 ) {
-
 			target.copy( x );
-
 		} else {
-
 			target.set( x, y, z );
-
 		}
 
 		this.object.lookAt( target );
-
 		setOrientation( this );
-
 		return this;
-
 	}
 
 	void update(double delta) {
@@ -206,39 +196,36 @@ class FirstPersonControls with EventDispatcher {
 
     double actualLookSpeed = delta * this.lookSpeed;
 
-    if ( ! this.activeLook ) {
+    if (LookType.active == lookType ) {
+      //actualLookSpeed = 0;
+      double verticalLookRatio = 1;
 
-      actualLookSpeed = 0;
+      if ( this.constrainVertical ) {
 
+        verticalLookRatio = Math.PI / ( this.verticalMax - this.verticalMin );
+
+      }
+
+      lon -= this.mouseX * actualLookSpeed;
+      if ( this.lookVertical ) lat -= this.mouseY * actualLookSpeed * verticalLookRatio;
+
+      lat = Math.max( - 85, Math.min( 85, lat ) );
+
+      num phi = MathUtils.degToRad( 90 - lat );
+      num theta = MathUtils.degToRad( lon );
+
+      if ( this.constrainVertical ) {
+
+        phi = MathUtils.mapLinear( phi, 0, Math.PI, this.verticalMin, this.verticalMax );
+
+      }
+
+      var position = this.object.position;
+
+      targetPosition.setFromSphericalCoords( 1, phi, theta ).add( position );
+
+      this.object.lookAt( targetPosition );
     }
-
-    double verticalLookRatio = 1;
-
-    if ( this.constrainVertical ) {
-
-      verticalLookRatio = Math.PI / ( this.verticalMax - this.verticalMin );
-
-    }
-
-    lon -= this.mouseX * actualLookSpeed;
-    if ( this.lookVertical ) lat -= this.mouseY * actualLookSpeed * verticalLookRatio;
-
-    lat = Math.max( - 85, Math.min( 85, lat ) );
-
-    num phi = MathUtils.degToRad( 90 - lat );
-    num theta = MathUtils.degToRad( lon );
-
-    if ( this.constrainVertical ) {
-
-      phi = MathUtils.mapLinear( phi, 0, Math.PI, this.verticalMin, this.verticalMax );
-
-    }
-
-    var position = this.object.position;
-
-    targetPosition.setFromSphericalCoords( 1, phi, theta ).add( position );
-
-    this.object.lookAt( targetPosition );
 	}
 
 	void contextmenu( event ) {
