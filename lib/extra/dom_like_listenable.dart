@@ -121,7 +121,6 @@ class DomLikeListenableState extends State<DomLikeListenable> {
 
   void _onPointerDown(BuildContext context, PointerDownEvent event) {
     var wpe = WebPointerEvent.fromPointerDownEvent(context, event);
-
     emit("touchstart", wpe);
     emit("pointerdown", wpe);
   }

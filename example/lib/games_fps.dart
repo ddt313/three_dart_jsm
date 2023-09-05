@@ -66,7 +66,6 @@ class _TestGamePageState extends State<TestGame> {
 
   Octree worldOctree = Octree();
   Capsule playerCollider = Capsule(Vector3( 0, 0.35, 0 ), Vector3( 0, 1, 0 ), 0.35);
-  late final Vector3 playerVelocity;
 
   bool playerOnFloor = false;
   int mouseTime = 0;
@@ -87,6 +86,8 @@ class _TestGamePageState extends State<TestGame> {
   Vector3 vector2 = Vector3();
   Vector3 vector3 = Vector3();
 
+  late final Vector3 playerVelocity;
+
   @override
   void initState() {
     super.initState();
@@ -99,7 +100,6 @@ class _TestGamePageState extends State<TestGame> {
   }
   
   void initSize(BuildContext context) {
-    print('here');
     if (screenSize != null) {
       return;
     }
@@ -180,9 +180,17 @@ class _TestGamePageState extends State<TestGame> {
 
     fpsControl = FirstPersonControls(camera, _globalKey);
     fpsControl.lookSpeed = 1/100;
-    fpsControl.movementSpeed = 5.0;
+    fpsControl.movementSpeed = 15.0;
     fpsControl.lookType = LookType.position;
-    playerVelocity = fpsControl.object.position;
+    playerVelocity = fpsControl.velocity;
+    fpsControl.domElement.addEventListener( 'keyup', (event){
+      if(event.keyId == 32){
+        playerVelocity.y = 15;
+      }
+    }, false );
+    fpsControl.domElement.addEventListener( 'pointerup', (event){
+      throwBall();
+    }, false );
     animationReady = true;
   }
   void render() {
@@ -271,14 +279,13 @@ class _TestGamePageState extends State<TestGame> {
     camera.getWorldDirection( fpsControl.targetPosition );
     sphere.collider.center.copy(playerCollider.end).addScaledVector( fpsControl.targetPosition, playerCollider.radius * 1.5 );
     // throw the ball with more force if we hold the button longer, and if we move forward
-    double impulse = 15 + 30 * ( 1 - Math.exp((mouseTime-DateTime.now().millisecondsSinceEpoch) * 0.001));
+    double impulse = 15 + 15 * ( 1 - Math.exp((mouseTime-DateTime.now().millisecondsSinceEpoch) * 0.001));
     sphere.velocity.copy( fpsControl.targetPosition ).multiplyScalar( impulse );
     sphere.velocity.addScaledVector( playerVelocity, 2 );
     sphereIdx = ( sphereIdx + 1 ) % spheres.length;
   }
   
   void playerCollisions() {
-    playerCollider.start.copy(playerVelocity.add(Vector3(0,0.02,0)));
     OctreeData? result = worldOctree.capsuleIntersect(playerCollider);
     playerOnFloor = false;
     if(result != null){
@@ -291,7 +298,6 @@ class _TestGamePageState extends State<TestGame> {
       }
       if(result.depth > 0.02){
         playerCollider.translate(result.normal.multiplyScalar(result.depth));
-        playerVelocity.add(playerCollider.start);
       }
     }
   }
@@ -303,11 +309,11 @@ class _TestGamePageState extends State<TestGame> {
       damping *= 0.1;
     }
 
-    //playerVelocity.addScaledVector( playerVelocity, damping );
-    //Vector3 deltaPosition = playerVelocity.clone().multiplyScalar( deltaTime );
-    //playerCollider.translate(deltaPosition);
-
+    playerVelocity.addScaledVector( playerVelocity, damping );
+    Vector3 deltaPosition = playerVelocity.clone().multiplyScalar( deltaTime );
+    playerCollider.translate(deltaPosition);
     playerCollisions();
+    camera.position.copy(playerCollider.end);
   }
   void playerSphereCollision(SphereData sphere) {
     Vector3 center = vector1.addVectors(playerCollider.start, playerCollider.end ).multiplyScalar( 0.5 );
@@ -384,11 +390,11 @@ class _TestGamePageState extends State<TestGame> {
   }
 
   void teleportPlayerIfOob(){
-    if(playerVelocity.y <= - 25){
+    if(camera.position.y <= - 25){
       playerCollider.start.set(0,0.35,0);
       playerCollider.end.set(0,1,0);
       playerCollider.radius = 0.35;
-      playerVelocity.copy(playerCollider.end);
+      camera.position.copy(playerCollider.end);
       camera.rotation.set(0,0,0);
     }
   }

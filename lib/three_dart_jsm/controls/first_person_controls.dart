@@ -25,9 +25,10 @@ class FirstPersonControls with EventDispatcher {
 	// API
 
 	bool enabled = true;
+  bool clickMove = false;
 
 	double movementSpeed = 1.0;
-  Vector3 cameraVelocity = Vector3();
+  Vector3 velocity = Vector3();
 	double lookSpeed = 0.05;
 
 	bool lookVertical = true;
@@ -43,8 +44,6 @@ class FirstPersonControls with EventDispatcher {
 	bool constrainVertical = false;
 	double verticalMin = 0;
 	double verticalMax = Math.PI;
-
-	bool mouseDragOn = false;
 
 	// internals
 
@@ -80,32 +79,23 @@ class FirstPersonControls with EventDispatcher {
 	}
 
 	void onMouseDown( event ) {
-		//this.domElement.focus();
-		event.preventDefault();
-		//event.stopPropagation();
-
-		if (lookType == LookType.active) {
+		if (clickMove) {
 			switch ( event.button ) {
 				case 0: this.moveForward = true; break;
 				case 2: this.moveBackward = true; break;
 			}
 		}
-
-		this.mouseDragOn = true;
 	}
 
-	void onMouseUp( event ) {
-		event.preventDefault();
-		//event.stopPropagation();
+  bool get isMoving => moveBackward || moveDown || moveUp || moveForward || moveLeft || moveRight;
 
-		if (lookType == LookType.active) {
+	void onMouseUp( event ) {
+		if (clickMove) {
 			switch ( event.button ) {
 				case 0: this.moveForward = false; break;
 				case 2: this.moveBackward = false; break;
 			}
 		}
-
-		this.mouseDragOn = false;
 	}
 
 	void onMouseMove(event) {
@@ -168,36 +158,66 @@ class FirstPersonControls with EventDispatcher {
 		setOrientation( this );
 		return this;
 	}
+  Vector3 getForwardVector() {
+    object.getWorldDirection(targetPosition);
+    targetPosition.y = 0;
+    targetPosition.normalize();
+    return targetPosition;
+  }
+  Vector3 getSideVector() {
+    object.getWorldDirection( targetPosition );
+    targetPosition.y = 0;
+    targetPosition.normalize();
+    targetPosition.cross( object.up );
+    return targetPosition;
+  }
+  Vector3 getUpVector(){
+    object.getWorldDirection( targetPosition );
+    targetPosition.x = 0;
+    targetPosition.z = 0;
+    targetPosition.y = 1;
+    targetPosition.normalize();
+    return targetPosition;
+  }
 
-	void update(double delta) {
-    if ( this.enabled == false ) return;
+  void update(double delta){
+    if(enabled == false) return;
 
-    if ( this.heightSpeed ) {
-      double y = MathUtils.clamp<double>( this.object.position.y, this.heightMin, this.heightMax );
-      var heightDelta = y - this.heightMin;
-
-      this.autoSpeedFactor = delta * ( heightDelta * this.heightCoef );
-
+    if(heightSpeed) {
+      double y = MathUtils.clamp<double>(object.position.y, heightMin, this.heightMax );
+      var heightDelta = y - heightMin;
+      autoSpeedFactor = delta * (heightDelta * heightCoef);
     }
     else {
-      this.autoSpeedFactor = 0.0;
+      autoSpeedFactor = 0.0;
     }
 
-    var actualMoveSpeed = delta * this.movementSpeed;
+    double actualMoveSpeed = delta * movementSpeed;
 
-    if ( this.moveForward || ( this.autoForward && ! this.moveBackward ) ) this.object.translateZ( - ( actualMoveSpeed + this.autoSpeedFactor ) );
-    if ( this.moveBackward ) this.object.translateZ( actualMoveSpeed );
+    if(moveForward || ( autoForward && !moveBackward ) ){
+      velocity.add( getForwardVector().multiplyScalar(actualMoveSpeed));
+    }
+    if(moveBackward){
+      velocity.add( getForwardVector().multiplyScalar(-actualMoveSpeed));
+    }
+    if(moveLeft){
+      velocity.add( getSideVector().multiplyScalar(-actualMoveSpeed));
+    }
+    if(moveRight){
+      velocity.add( getSideVector().multiplyScalar(actualMoveSpeed));
+    }
+    if(moveUp){
+      velocity.add( getUpVector().multiplyScalar(actualMoveSpeed));
+    }
+    if(moveDown){
+      velocity.add( getUpVector().multiplyScalar(-actualMoveSpeed));
+    }
 
-    if ( this.moveLeft ) this.object.translateX( - actualMoveSpeed );
-    if ( this.moveRight ) this.object.translateX( actualMoveSpeed );
-
-    if ( this.moveUp ) this.object.translateY( actualMoveSpeed );
-    if ( this.moveDown ) this.object.translateY( - actualMoveSpeed );
-
-    double actualLookSpeed = delta * this.lookSpeed;
+    
+    object.position.copy(velocity);
 
     if (LookType.active == lookType ) {
-      //actualLookSpeed = 0;
+      double actualLookSpeed = delta * this.lookSpeed*100;
       double verticalLookRatio = 1;
 
       if ( this.constrainVertical ) {
@@ -226,7 +246,63 @@ class FirstPersonControls with EventDispatcher {
 
       this.object.lookAt( targetPosition );
     }
-	}
+  }
+	// void update2(double delta) {
+  //   if ( this.enabled == false ) return;
+
+  //   if ( this.heightSpeed ) {
+  //     double y = MathUtils.clamp<double>( this.object.position.y, this.heightMin, this.heightMax );
+  //     var heightDelta = y - this.heightMin;
+  //     this.autoSpeedFactor = delta * ( heightDelta * this.heightCoef );
+  //   }
+  //   else {
+  //     this.autoSpeedFactor = 0.0;
+  //   }
+
+  //   var actualMoveSpeed = delta * this.movementSpeed;
+
+  //   if ( this.moveForward || ( this.autoForward && ! this.moveBackward ) ) this.object.translateZ( - ( actualMoveSpeed + this.autoSpeedFactor ) );
+  //   if ( this.moveBackward ) this.object.translateZ( actualMoveSpeed );
+
+  //   if ( this.moveLeft ) this.object.translateX( - actualMoveSpeed );
+  //   if ( this.moveRight ) this.object.translateX( actualMoveSpeed );
+
+  //   if ( this.moveUp ) this.object.translateY( actualMoveSpeed );
+  //   if ( this.moveDown ) this.object.translateY( - actualMoveSpeed );
+
+  //   double actualLookSpeed = delta * this.lookSpeed;
+
+  //   if (LookType.active == lookType ) {
+  //     //actualLookSpeed = 0;
+  //     double verticalLookRatio = 1;
+
+  //     if ( this.constrainVertical ) {
+
+  //       verticalLookRatio = Math.PI / ( this.verticalMax - this.verticalMin );
+
+  //     }
+
+  //     lon -= this.mouseX * actualLookSpeed;
+  //     if ( this.lookVertical ) lat -= this.mouseY * actualLookSpeed * verticalLookRatio;
+
+  //     lat = Math.max( - 85, Math.min( 85, lat ) );
+
+  //     num phi = MathUtils.degToRad( 90 - lat );
+  //     num theta = MathUtils.degToRad( lon );
+
+  //     if ( this.constrainVertical ) {
+
+  //       phi = MathUtils.mapLinear( phi, 0, Math.PI, this.verticalMin, this.verticalMax );
+
+  //     }
+
+  //     var position = this.object.position;
+
+  //     targetPosition.setFromSphericalCoords( 1, phi, theta ).add( position );
+
+  //     this.object.lookAt( targetPosition );
+  //   }
+	// }
 
 	void contextmenu( event ) {
 		event.preventDefault();
