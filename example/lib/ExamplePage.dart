@@ -1,5 +1,6 @@
 import 'package:example/misc_controls_pointerlock.dart';
 import 'package:example/webgl_loader_fbx.dart';
+import 'package:example/webgl_marching_cubes.dart';
 
 import './misc_controls_orbit.dart';
 // import './webgpu_rtt.dart';
@@ -47,7 +48,8 @@ class _MyAppState extends State<ExamplePage> {
       page = misc_controls_pointerlock(fileName: fileName);
     } else if (fileName == "webgl_loader_fbx") {
       page = webgl_loader_fbx(fileName: fileName);
-      
+    } else if (fileName == "webgl_marching_cubes") {
+      page = webgl_marching_cubes(fileName: fileName);
     } else {
       throw ("ExamplePage fileName ${fileName} is not support yet ");
     }
