@@ -4,6 +4,133 @@ class BufferGeometryUtils {
   static computeTangents(geometry, [bool negateSign = true]) {
     throw(" computeTangents   TODO "); 
   }
+
+  static num? _getters(Float32BufferAttribute attribute,int index,String getter){
+    if(getter == 'getX'){
+      return attribute.getX(index);
+    }
+    else if(getter == 'getY'){
+      return attribute.getY(index);
+    }
+    else if(getter == 'getZ'){
+      return attribute.getZ(index);
+    }
+    else{
+      return attribute.getW(index);
+    }
+  }
+
+  /**
+   * @param {BufferGeometry} geometry
+   * @param {number} tolerance
+   * @return {BufferGeometry>}
+   */
+  static BufferGeometry mergeVertices(BufferGeometry geometry, [double tolerance = 1e-4 ]) {
+    tolerance = Math.max(tolerance, Math.EPSILON);
+
+    // Generate an index buffer if the geometry doesn't have one, or optimize it
+    // if it's already available.
+    Map<String,dynamic> hashToIndex = {};
+    final indices = geometry.getIndex();
+    final Float32BufferAttribute positions = geometry.getAttribute('position');
+    final vertexCount = indices != null? indices.count : positions.count;
+
+    // next value for triangle indices
+    int nextIndex = 0;
+
+    // attributes and new attribute arrays
+    Map<String,dynamic> attrArrays = {};
+    Map<String,dynamic> morphAttrsArrays = {};
+    final List<int> newIndices = [];
+    final getters = [ 'getX', 'getY', 'getZ', 'getW' ];
+
+    // initialize the arrays
+    for (String name in geometry.attributes.keys) {
+      attrArrays[ name ] = [];
+      final morphAttr = geometry.morphAttributes[ name ];
+      if (morphAttr != null) {
+        morphAttrsArrays[ name ] = List.filled(morphAttr.length, []);//Array( morphAttr.length ).fill().map( () => [] );
+      }
+    }
+
+    // convert the error tolerance to an amount of decimal places to truncate to
+    final decimalShift = Math.log10( 1 / tolerance );
+    final shiftMultiplier = Math.pow( 10, decimalShift );
+    for (int i = 0; i < vertexCount; i ++ ) {
+      final int index = indices != null? indices.getX(i)!.toInt() : i;
+
+      // Generate a hash for the vertex attributes at the current index 'i'
+      String hash = '';
+      for (String name in geometry.attributes.keys) {
+        final Float32BufferAttribute attribute = geometry.getAttribute( name );
+        final itemSize = attribute.itemSize;
+
+        for (int k = 0; k < itemSize; k ++ ) {
+          // double tilde truncates the decimal value
+          hash += '${_getters(attribute,index,getters[k])! * shiftMultiplier},';
+        }
+      }
+
+      // Add another reference to the vertex if it's already
+      // used by another index
+      if(hashToIndex.containsKey(hash)){
+        newIndices.add(hashToIndex[hash]);
+      } 
+      else {
+        // copy data to the new index in the attribute arrays
+        for (String name in geometry.attributes.keys) {
+          final attribute = geometry.getAttribute(name);
+          final morphAttr = geometry.morphAttributes[name];
+          final itemSize = attribute.itemSize;
+          final newarray = attrArrays[name];
+          final newMorphArrays = morphAttrsArrays[name];
+
+          for ( int k = 0; k < itemSize; k ++ ) {
+            final getterFunc = getters[k];
+              newarray.add(_getters(attribute, index, getterFunc));//attribute[ getterFunc ]( index ) );
+            if ( morphAttr != null) {
+              for (int m = 0, ml = morphAttr.length; m < ml; m ++ ) {
+                newMorphArrays[m].add(
+                  morphAttr[m]//[getterFunc](index)
+                );
+              }
+            }
+          }
+        }
+
+        hashToIndex[hash] = nextIndex;
+        newIndices.add(nextIndex);
+        nextIndex++;
+      }
+    }
+
+    // Generate typed arrays from new attribute arrays and update
+    // the attributeBuffers
+    final result = geometry.clone();
+    for (String name in geometry.attributes.keys) {
+      final Float32BufferAttribute oldAttribute = geometry.getAttribute(name);
+      final Float32Array buffer = oldAttribute.array;
+      final attribute = Float32BufferAttribute(buffer, oldAttribute.itemSize, oldAttribute.normalized);
+
+      result.setAttribute(name, attribute);
+
+      // Update the attribute arrays
+      if (morphAttrsArrays.containsKey(name)) {
+        for (int j = 0; j < morphAttrsArrays[ name ].length; j ++ ) {
+          final oldMorphAttribute = geometry.morphAttributes[name]![j];
+          final Float32Array buffer = oldMorphAttribute.array as Float32Array;//.constructor( morphAttrsArrays[ name ][ j ] );
+          final morphAttribute = Float32BufferAttribute( buffer, oldMorphAttribute.itemSize, oldMorphAttribute.normalized );
+          result.morphAttributes[name]![j] = morphAttribute;
+        }
+      }
+    }
+
+    // indices
+
+    result.setIndex( newIndices );
+
+    return result;
+  }
 }
 
 // /**
@@ -357,155 +484,6 @@ class BufferGeometryUtils {
 // 	const indices = geometry.getIndex();
 // 	mem += indices ? indices.count * indices.itemSize * indices.array.BYTES_PER_ELEMENT : 0;
 // 	return mem;
-
-// }
-
-// /**
-//  * @param {BufferGeometry} geometry
-//  * @param {number} tolerance
-//  * @return {BufferGeometry>}
-//  */
-// function mergeVertices( geometry, tolerance = 1e-4 ) {
-
-// 	tolerance = Math.max( tolerance, Number.EPSILON );
-
-// 	// Generate an index buffer if the geometry doesn't have one, or optimize it
-// 	// if it's already available.
-// 	const hashToIndex = {};
-// 	const indices = geometry.getIndex();
-// 	const positions = geometry.getAttribute( 'position' );
-// 	const vertexCount = indices ? indices.count : positions.count;
-
-// 	// next value for triangle indices
-// 	let nextIndex = 0;
-
-// 	// attributes and new attribute arrays
-// 	const attributeNames = Object.keys( geometry.attributes );
-// 	const attrArrays = {};
-// 	const morphAttrsArrays = {};
-// 	const newIndices = [];
-// 	const getters = [ 'getX', 'getY', 'getZ', 'getW' ];
-
-// 	// initialize the arrays
-// 	for ( let i = 0, l = attributeNames.length; i < l; i ++ ) {
-
-// 		const name = attributeNames[ i ];
-
-// 		attrArrays[ name ] = [];
-
-// 		const morphAttr = geometry.morphAttributes[ name ];
-// 		if ( morphAttr ) {
-
-// 			morphAttrsArrays[ name ] = new Array( morphAttr.length ).fill().map( () => [] );
-
-// 		}
-
-// 	}
-
-// 	// convert the error tolerance to an amount of decimal places to truncate to
-// 	const decimalShift = Math.log10( 1 / tolerance );
-// 	const shiftMultiplier = Math.pow( 10, decimalShift );
-// 	for ( let i = 0; i < vertexCount; i ++ ) {
-
-// 		const index = indices ? indices.getX( i ) : i;
-
-// 		// Generate a hash for the vertex attributes at the current index 'i'
-// 		let hash = '';
-// 		for ( let j = 0, l = attributeNames.length; j < l; j ++ ) {
-
-// 			const name = attributeNames[ j ];
-// 			const attribute = geometry.getAttribute( name );
-// 			const itemSize = attribute.itemSize;
-
-// 			for ( let k = 0; k < itemSize; k ++ ) {
-
-// 				// double tilde truncates the decimal value
-// 				hash += `${ ~ ~ ( attribute[ getters[ k ] ]( index ) * shiftMultiplier ) },`;
-
-// 			}
-
-// 		}
-
-// 		// Add another reference to the vertex if it's already
-// 		// used by another index
-// 		if ( hash in hashToIndex ) {
-
-// 			newIndices.push( hashToIndex[ hash ] );
-
-// 		} else {
-
-// 			// copy data to the new index in the attribute arrays
-// 			for ( let j = 0, l = attributeNames.length; j < l; j ++ ) {
-
-// 				const name = attributeNames[ j ];
-// 				const attribute = geometry.getAttribute( name );
-// 				const morphAttr = geometry.morphAttributes[ name ];
-// 				const itemSize = attribute.itemSize;
-// 				const newarray = attrArrays[ name ];
-// 				const newMorphArrays = morphAttrsArrays[ name ];
-
-// 				for ( let k = 0; k < itemSize; k ++ ) {
-
-// 					const getterFunc = getters[ k ];
-// 					newarray.push( attribute[ getterFunc ]( index ) );
-
-// 					if ( morphAttr ) {
-
-// 						for ( let m = 0, ml = morphAttr.length; m < ml; m ++ ) {
-
-// 							newMorphArrays[ m ].push( morphAttr[ m ][ getterFunc ]( index ) );
-
-// 						}
-
-// 					}
-
-// 				}
-
-// 			}
-
-// 			hashToIndex[ hash ] = nextIndex;
-// 			newIndices.push( nextIndex );
-// 			nextIndex ++;
-
-// 		}
-
-// 	}
-
-// 	// Generate typed arrays from new attribute arrays and update
-// 	// the attributeBuffers
-// 	const result = geometry.clone();
-// 	for ( let i = 0, l = attributeNames.length; i < l; i ++ ) {
-
-// 		const name = attributeNames[ i ];
-// 		const oldAttribute = geometry.getAttribute( name );
-
-// 		const buffer = new oldAttribute.array.constructor( attrArrays[ name ] );
-// 		const attribute = new BufferAttribute( buffer, oldAttribute.itemSize, oldAttribute.normalized );
-
-// 		result.setAttribute( name, attribute );
-
-// 		// Update the attribute arrays
-// 		if ( name in morphAttrsArrays ) {
-
-// 			for ( let j = 0; j < morphAttrsArrays[ name ].length; j ++ ) {
-
-// 				const oldMorphAttribute = geometry.morphAttributes[ name ][ j ];
-
-// 				const buffer = new oldMorphAttribute.array.constructor( morphAttrsArrays[ name ][ j ] );
-// 				const morphAttribute = new BufferAttribute( buffer, oldMorphAttribute.itemSize, oldMorphAttribute.normalized );
-// 				result.morphAttributes[ name ][ j ] = morphAttribute;
-
-// 			}
-
-// 		}
-
-// 	}
-
-// 	// indices
-
-// 	result.setIndex( newIndices );
-
-// 	return result;
 
 // }
 
