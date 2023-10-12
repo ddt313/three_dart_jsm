@@ -373,7 +373,7 @@ class ParserState {
 class OBJLoader extends Loader {
   MaterialCreator? materials;
 
-  OBJLoader(manager) : super(manager) {}
+  OBJLoader([manager]):super(manager) {}
 
   loadAsync(url) async {
     var completer = Completer();

@@ -22,3 +22,4 @@ part './OBJLoader.dart';
 part './RGBELoader.dart';
 part './MTLLoader.dart';
 part './FBXLoader.dart';
+part './stl_loader.dart';

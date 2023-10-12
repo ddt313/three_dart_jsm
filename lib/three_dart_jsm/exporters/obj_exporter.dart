@@ -17,7 +17,7 @@ class OBJExporter{
     final Vector3 vertex = Vector3();
 		final Vector3 normal = Vector3();
 		final Vector2 uv = Vector2();
-    List<String> face = [];
+    List<String> face = ['','',''];
 
     int nbVertex = 0;
     int nbNormals = 0;
@@ -89,7 +89,7 @@ class OBJExporter{
         }
 
         // transform the face to export format
-        _output += 'f ' + face.join( ' ' ) + "\n";
+        _output += 'f ${face.join(' ')}\n';
       }
     } 
     else{
@@ -99,7 +99,7 @@ class OBJExporter{
           face[m] = '${_indexVertex + j}/${uvs != null? ( _indexVertexUvs + j ) : ''}/${_indexNormals + j}';
         }
         // transform the face to export format
-        _output += 'f ' + face.join( ' ' ) + "\n";
+        _output += 'f ${face.join(' ')}\n';
       }
     }
 

@@ -9,3 +9,4 @@ part './VertexNormalsHelper.dart';
 part './VertexTangentsHelper.dart';
 part './RectAreaLightHelper.dart';
 part './octreehelper.dart';
+part './seperate_by_loose_parts.dart';
