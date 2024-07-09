@@ -1,5 +1,3 @@
-# three_dart_jsm
+# Archived
 
-[three.js](https://github.com/mrdoob/three.js/) example jsm rewrite by Dart.
-
-Used by [three_dart](https://github.com/wasabia/three_dart)
+This has been archived and will no longer be maintained. Please use [three_js](https://github.com/Knightro63/three_js) in the future.
