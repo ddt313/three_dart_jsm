@@ -212,7 +212,7 @@ class UnrealBloomPass extends Pass {
       this.basic.map = readBuffer.texture;
 
       renderer.setRenderTarget(null);
-      renderer.clear(null, null, null);
+      renderer.clear();
       this.fsQuad.render(renderer);
     }
 
@@ -223,7 +223,7 @@ class UnrealBloomPass extends Pass {
     this.fsQuad.material = this.materialHighPassFilter;
 
     renderer.setRenderTarget(this.renderTargetBright);
-    renderer.clear(null, null, null);
+    renderer.clear();
     this.fsQuad.render(renderer);
 
     // 2. Blur All the mips progressively
@@ -236,13 +236,13 @@ class UnrealBloomPass extends Pass {
       this.separableBlurMaterials[i].uniforms['colorTexture']["value"] = inputRenderTarget.texture;
       this.separableBlurMaterials[i].uniforms['direction']["value"] = UnrealBloomPass.BlurDirectionX;
       renderer.setRenderTarget(this.renderTargetsHorizontal[i]);
-      renderer.clear(null, null, null);
+      renderer.clear();
       this.fsQuad.render(renderer);
 
       this.separableBlurMaterials[i].uniforms['colorTexture']["value"] = this.renderTargetsHorizontal[i].texture;
       this.separableBlurMaterials[i].uniforms['direction']["value"] = UnrealBloomPass.BlurDirectionY;
       renderer.setRenderTarget(this.renderTargetsVertical[i]);
-      renderer.clear(null, null, null);
+      renderer.clear();
       this.fsQuad.render(renderer);
 
       inputRenderTarget = this.renderTargetsVertical[i];
@@ -256,7 +256,7 @@ class UnrealBloomPass extends Pass {
     this.compositeMaterial.uniforms['bloomTintColors']["value"] = this.bloomTintColors;
 
     renderer.setRenderTarget(this.renderTargetsHorizontal[0]);
-    renderer.clear(null, null, null);
+    renderer.clear();
     this.fsQuad.render(renderer);
 
     // Blend it additively over the input texture
