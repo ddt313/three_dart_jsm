@@ -25,8 +25,7 @@ class SSAARenderPass extends Pass {
     this.scene = scene;
     this.camera = camera;
 
-    this.sampleLevel =
-        4; // specified as n, where the number of samples is 2^n, so sampleLevel = 4, is 2^4 samples, 16.
+    this.sampleLevel = 4; // specified as n, where the number of samples is 2^n, so sampleLevel = 4, is 2^4 samples, 16.
     this.unbiased = true;
 
     // as we need to clear the buffer in this pass, clearColor must be set to something, defaults to black.
@@ -61,26 +60,17 @@ class SSAARenderPass extends Pass {
   }
 
   setSize(width, height) {
-    if (this.sampleRenderTarget != null)
-      this.sampleRenderTarget!.setSize(width, height);
+    if (this.sampleRenderTarget != null) this.sampleRenderTarget!.setSize(width, height);
   }
 
-  render(renderer, writeBuffer, readBuffer,
-      {num? deltaTime, bool? maskActive}) {
+  render(renderer, writeBuffer, readBuffer, {num? deltaTime, bool? maskActive}) {
     if (this.sampleRenderTarget == null) {
-      this.sampleRenderTarget = new WebGLRenderTarget(
-          readBuffer.width,
-          readBuffer.height,
-          WebGLRenderTargetOptions({
-            "minFilter": LinearFilter,
-            "magFilter": LinearFilter,
-            "format": RGBAFormat
-          }));
+      this.sampleRenderTarget = new WebGLRenderTarget(readBuffer.width, readBuffer.height,
+          WebGLRenderTargetOptions({"minFilter": LinearFilter, "magFilter": LinearFilter, "format": RGBAFormat}));
       this.sampleRenderTarget!.texture.name = 'SSAARenderPass.sample';
     }
 
-    var jitterOffsets =
-        _JitterVectors[Math.max(0, Math.min(this.sampleLevel, 5))];
+    var jitterOffsets = _JitterVectors[Math.max(0, Math.min(this.sampleLevel, 5))];
 
     var autoClear = renderer.autoClear;
     renderer.autoClear = false;
@@ -101,11 +91,9 @@ class SSAARenderPass extends Pass {
       "height": readBuffer.height
     };
 
-    Map<String, dynamic> originalViewOffset =
-        jsonDecode(jsonEncode(this.camera.view ?? {}));
+    Map<String, dynamic> originalViewOffset = jsonDecode(jsonEncode(this.camera.view ?? {}));
 
-    if (originalViewOffset["enabled"] == true)
-      viewOffset.addAll(originalViewOffset);
+    if (originalViewOffset["enabled"] == true) viewOffset.addAll(originalViewOffset);
 
     // render the scene multiple times, each slightly jitter offset from the last and accumulate the results.
     for (var i = 0; i < jitterOffsets.length; i++) {
@@ -138,13 +126,12 @@ class SSAARenderPass extends Pass {
         // The following equation varies the sampleWeight per sample so that it is uniformly distributed
         // across a range of values whose rounding errors cancel each other out.
 
-        var uniformCenteredDistribution =
-            (-0.5 + (i + 0.5) / jitterOffsets.length);
+        var uniformCenteredDistribution = (-0.5 + (i + 0.5) / jitterOffsets.length);
         sampleWeight += roundingRange * uniformCenteredDistribution;
       }
 
       this.copyUniforms['opacity']["value"] = sampleWeight;
-      renderer.setClearColor(this.clearColor, alpha: this.clearAlpha);
+      renderer.setClearColor(this.clearColor, this.clearAlpha);
       renderer.setRenderTarget(this.sampleRenderTarget);
       renderer.clear(true, true, true);
       renderer.render(this.scene, this.camera);
@@ -152,15 +139,14 @@ class SSAARenderPass extends Pass {
       renderer.setRenderTarget(this.renderToScreen ? null : writeBuffer);
 
       if (i == 0) {
-        renderer.setClearColor(Color.fromHex(0x000000), alpha: 0.0);
+        renderer.setClearColor(Color.fromHex(0x000000), 0.0);
         renderer.clear(true, true, true);
       }
 
       this.fsQuad.render(renderer);
     }
 
-    if (this.camera.type == "OrthographicCamera" &&
-        originalViewOffset["enabled"] == true) {
+    if (this.camera.type == "OrthographicCamera" && originalViewOffset["enabled"] == true) {
       (this.camera as OrthographicCamera).setViewOffset(
           originalViewOffset["fullWidth"],
           originalViewOffset["fullHeight"],
@@ -168,8 +154,7 @@ class SSAARenderPass extends Pass {
           originalViewOffset["offsetY"],
           originalViewOffset["width"],
           originalViewOffset["height"]);
-    } else if (this.camera.type == "PerspectiveCamera" &&
-        originalViewOffset["enabled"] == true) {
+    } else if (this.camera.type == "PerspectiveCamera" && originalViewOffset["enabled"] == true) {
       (this.camera as PerspectiveCamera).setViewOffset(
           originalViewOffset["fullWidth"],
           originalViewOffset["fullHeight"],
@@ -184,7 +169,7 @@ class SSAARenderPass extends Pass {
     }
 
     renderer.autoClear = autoClear;
-    renderer.setClearColor(this._oldClearColor, alpha: oldClearAlpha);
+    renderer.setClearColor(this._oldClearColor, oldClearAlpha);
   }
 }
 

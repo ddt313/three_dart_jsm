@@ -7,9 +7,7 @@ class RenderPass extends Pass {
   Material? overrideMaterial;
   Color _oldClearColor = Color(1, 1, 1);
 
-  RenderPass(scene, camera, Material? overrideMaterial, Color? clearColor,
-      num? clearAlpha)
-      : super() {
+  RenderPass(scene, camera, Material? overrideMaterial, Color? clearColor, num? clearAlpha) : super() {
     this.scene = scene;
     this.camera = camera;
 
@@ -22,8 +20,7 @@ class RenderPass extends Pass {
     this.needsSwap = false;
   }
 
-  render(renderer, writeBuffer, readBuffer,
-      {num? deltaTime, bool? maskActive}) {
+  render(renderer, writeBuffer, readBuffer, {num? deltaTime, bool? maskActive}) {
     var oldAutoClear = renderer.autoClear;
     renderer.autoClear = false;
 
@@ -39,7 +36,7 @@ class RenderPass extends Pass {
       renderer.getClearColor(this._oldClearColor);
       oldClearAlpha = renderer.getClearAlpha();
 
-      renderer.setClearColor(this.clearColor, alpha: this.clearAlpha);
+      renderer.setClearColor(this.clearColor, this.clearAlpha);
     }
 
     if (this.clearDepth) {
@@ -49,13 +46,11 @@ class RenderPass extends Pass {
     renderer.setRenderTarget(this.renderToScreen ? null : readBuffer);
 
     // TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
-    if (this.clear)
-      renderer.clear(renderer.autoClearColor, renderer.autoClearDepth,
-          renderer.autoClearStencil);
+    if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
     renderer.render(this.scene, this.camera);
 
     if (this.clearColor != null) {
-      renderer.setClearColor(this._oldClearColor, alpha: oldClearAlpha);
+      renderer.setClearColor(this._oldClearColor, oldClearAlpha);
     }
 
     if (this.overrideMaterial != null) {
